@@ -1,0 +1,3 @@
+Data was gathered via web-scraping techniques from the Butler County Health Department website as well as Yelp restaurant reviews to develop a predictive model
+that could predict the risk level of various dining establishments in Oxford, Ohio. Samples of Python notebooks for web-scraping, data merging, preprocessing, 
+cleaning, feature engineering, and predictive modeling are provided along with the final presentation and whitepaper for the described project.
