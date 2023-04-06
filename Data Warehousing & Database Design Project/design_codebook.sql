@@ -1,0 +1,487 @@
+## Creating Tables in the Database
+
+CREATE TABLE Supplier 
+(SupplierID NUMBER(6) PRIMARY KEY,
+SupplierName VARCHAR2(50) NOT NULL,
+SupplierAddress VARCHAR2 (30),
+SupplierZipCode VARCHAR2 (10),
+SupplierState CHAR(2),
+SupplierPhone VARCHAR2 (10) NOT NULL,
+SupplierAreaCode VARCHAR2 (5),
+SupplierEmail VARCHAR2 (50));
+
+CREATE TABLE DayCareCompany
+(DaycareID NUMBER(6) PRIMARY KEY,
+DCName VARCHAR2(30),
+DCAreaCode VARCHAR2(5),
+DCPhone VARCHAR2(10),
+DCZipCode VARCHAR2(10),
+DCAddress VARCHAR2(30),
+DCState CHAR(2));
+
+CREATE TABLE Employee
+(EmpID NUMBER(6) PRIMARY KEY,
+EmpFName VARCHAR2(30) NOT NULL,
+EmpLName VARCHAR2(30) NOT NULL,
+EmpDOH DATE NOT NULL,
+EmpDOB DATE NOT NULL,
+EmpCellPhoneAreaCode VARCHAR2(5) NOT NULL,
+EmpCellPhoneNumber VARCHAR2(10) NOT NULL,
+HCPolicyNumber VARCHAR2(15) NOT NULL,
+HCProvider_FName VARCHAR2(30),
+HCProvider_LName VARCHAR2(30) NOT NULL,
+EmpHomeAddress VARCHAR2(30) NOT NULL,
+EmpCity VARCHAR2(40) NOT NULL,
+EmpState CHAR(2) NOT NULL,
+EmpZipCode VARCHAR2(10) NOT NULL,
+HoursWorked NUMBER(2) NOT NULL,
+HourlyRate NUMBER(10,4) NOT NULL,
+EmpType VARCHAR2(30) NOT NULL,
+DaycareID NUMBER(6) NOT NULL,
+CONSTRAINT employee_daycareid_fk FOREIGN KEY(daycareid) REFERENCES daycarecompany(daycareid));
+
+CREATE TABLE Classroom
+(ClassroomNo NUMBER(6) PRIMARY KEY,
+EmpID NUMBER(6),
+ClassroomOccupancy NUMBER(2),
+CONSTRAINT classroom_emp_id_fk FOREIGN KEY (EmpID) REFERENCES Employee (EmpID));
+
+CREATE TABLE Material
+(MaterialName VARCHAR2(30)    PRIMARY KEY,  
+ProductName VARCHAR2(50)      NULL,
+MaterialQTY NUMBER(3)       NOT NULL,
+SupplierID NUMBER(6)	NOT NULL,
+CONSTRAINT material_classroomno_fk FOREIGN KEY (classroomno) REFERENCES classroom(classroomno),
+CONSTRAINT SupplierID_fk FOREIGN KEY (SupplierID) REFERENCES Supplier (SupplierID));
+
+CREATE TABLE Parent 
+(ParentID NUMBER(6)      PRIMARY KEY,
+ParentFName VARCHAR2(30)       NOT NULL,
+ParentLName VARCHAR2(30)       NOT NULL,
+ParentAddress VARCHAR2(30)        NOT NULL,
+ParentRelationToChild VARCHAR2(20),   
+ParentPhone VARCHAR2(10)       NOT NULL,
+ParentAreaCode VARCHAR2(5),
+ParentZipCode VARCHAR2(10),
+ParentCity VARCHAR2(30),
+ParentLastPayment DATE,
+ParentTotalAmountOwed NUMBER(10,4),
+ParentPaymentType VARCHAR2(30));
+
+
+CREATE TABLE Child
+(ClassroomNo  NUMBER(6) NOT NULL,
+ChildID NUMBER(6) PRIMARY KEY,
+ChildFName VARCHAR2(30) NOT NULL,
+ChildLName VARCHAR2(30) NOT NULL,
+ChildDOB DATE NOT NULL,
+FoodAllergies VARCHAR2(500),
+ParentID NUMBER(6) NOT NULL,
+EmergencyContactOne_FName VARCHAR2(30) NOT NULL,
+EmergencyContactOne_LName VARCHAR2(30) NOT NULL,
+EmergencyContactOne_AreaCode VARCHAR2(5) NOT NULL,
+EmergencyContactOne_PNumber VARCHAR2(10) NOT NULL,
+EmergencyContactTwo_FName VARCHAR2(30),
+EmergencyContactTwo_LName VARCHAR2(30),
+EmergencyContactTwo_AreaCode VARCHAR2(5),
+EmergencyContactTwo_PNumber VARCHAR(10),
+CONSTRAINT ParentID_fk FOREIGN KEY (ParentID) REFERENCES Parent (ParentID),
+CONSTRAINT child_classroomno_fk FOREIGN KEY (classroomno) REFERENCES classroom(classroomno));
+
+
+CREATE TABLE Head_Teacher
+(EmpID NUMBER(6)  PRIMARY KEY,
+HT_GED CHAR(1)  NOT NULL,
+Certificate CHAR(1) NOT NULL,
+CONSTRAINT head_teacher_fk FOREIGN KEY (EmpID) REFERENCES Employee(EmpID)); 
+
+CREATE TABLE assistant_teacher
+(EmpID NUMBER(6)   PRIMARY KEY,
+AT_GED CHAR(1)  NOT NULL,
+CONSTRAINT assistant_teacher_fk FOREIGN KEY (EmpID) REFERENCES Employee(EmpID));
+
+CREATE TABLE OrderForm
+(Materialname VARCHAR2(30),
+Supplierid  NUMBER(6),
+OrderQTY NUMBER(6),
+UnitPrice NUMBER(10,4),
+CONSTRAINT OrderForm_MaterialName_fk FOREIGN KEY (MaterialName) REFERENCES Material(MaterialName),
+CONSTRAINT OrderForm_SupplierID_fk FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID),
+CONSTRAINT OrderForm_MatName_SupID_pk PRIMARY KEY(MaterialName, SupplierID));
+
+
+## Estbalish Data Types for Variables and Insert Data
+
+CREATE TABLE Supplier 
+(SupplierID NUMBER(6) PRIMARY KEY,
+SupplierName VARCHAR2(50) NOT NULL,
+SupplierAddress VARCHAR2 (30),
+SupplierZipCode VARCHAR2 (10),
+SupplierState CHAR(2),
+SupplierPhone VARCHAR2 (10) NOT NULL,
+SupplierAreaCode VARCHAR2 (5),
+SupplierEmail VARCHAR2 (50));
+
+
+
+
+INSERT INTO supplier
+VALUES(859254, 'Walmart', '256 Hickory Lane', 29467, 'OH', '859-9463', '965', 'questions@walmart.com');
+
+INSERT INTO supplier
+VALUES(918323, 'Gordon Food Services', '65 Food Service Drive', 74538, 'OH', '375-2628', '546', 'customerinquiries@gordonfoodservices.com');
+
+INSERT INTO supplier
+VALUES(957347, 'Quill', '2189 Creek Road', 25485, 'OH', '213-3628', '295','supplierhelp@quill.com');
+
+INSERT INTO supplier
+VALUES(573958, 'DollarDays', '34 Ridgeway Lane', 73940, 'IN', '265-2378', '221', 'customerservice@dollardays.com');
+
+CREATE TABLE DayCareCompany
+(DaycareID NUMBER(6) PRIMARY KEY,
+DCName VARCHAR2(30),
+DCAreaCode VARCHAR2(5),
+DCPhone VARCHAR2(10),
+DCZipCode VARCHAR2(10),
+DCAddress VARCHAR2(30),
+DCState CHAR(2));
+
+
+INSERT INTO DayCareCompany
+VALUES(450390,'Toddler Time',513,'398-2918',45039,'412 Terwillegers Run','OH');
+
+CREATE TABLE Employee
+(EmpID NUMBER(6) PRIMARY KEY,
+EmpFName VARCHAR2(30) NOT NULL,
+EmpLName VARCHAR2(30) NOT NULL,
+EmpDOH DATE NOT NULL,
+EmpDOB DATE NOT NULL,
+EmpCellPhoneAreaCode VARCHAR2(5) NOT NULL,
+EmpCellPhoneNumber VARCHAR2(10) NOT NULL,
+HCPolicyNumber VARCHAR2(15) NOT NULL,
+HCProvider_FName VARCHAR2(30),
+HCProvider_LName VARCHAR2(30) NOT NULL,
+EmpHomeAddress VARCHAR2(30) NOT NULL,
+EmpCity VARCHAR2(40) NOT NULL,
+EmpState CHAR(2) NOT NULL,
+EmpZipCode VARCHAR2(10) NOT NULL,
+HoursWorked NUMBER(2) NOT NULL,
+HourlyRate NUMBER(10,4) NOT NULL,
+EmpType VARCHAR2(30) NOT NULL,
+DaycareID NUMBER(6) NOT NULL,
+CONSTRAINT employee_daycareid_fk FOREIGN KEY(daycareid) REFERENCES daycarecompany(daycareid));
+
+INSERT INTO employee
+VALUES(209349, 'Andrea', 'Gills', '13-Feb-2019', '23-Sep-1984', '937', '364-8896', 394724998, 'Bob', 'Crowley', '25 Pickett Lane', 'Maineville', 'OH', 45039, 37, 13.00, 'Head', 450390);
+
+INSERT INTO employee
+VALUES(827494, 'Rudy', 'Boesh', '03-Jan-2021', '14-Jan-1999', '955', '644-2674', 1032284756578, 'Vecepia', 'King', '4588 Orchid Lane', 'Lebanon', 'OH', 45036, 40, 11.00, 'Assistant', 450390);
+
+INSERT INTO employee
+VALUES(579234, 'Susan', 'Hawk', '03-Jan-2016', '12-Jun-1995', '937', '546-8223', 982373, 'Tina', 'Wesson', '76003 Astonia Avenue', 'Mason', 'OH', 45040, 24, 15.00, 'Head', 450390);
+
+INSERT INTO employee
+VALUES(549842, 'Kelly', 'Wentworth', '29-Nov-2020', '07-Jan-1973', '556', '238-9968', 10176732, 'Colby', 'Donaldson', '89 Chester Way', 'Miamisburg', 'OH', 45342, 12, 12.00, 'Head', 450390);
+
+INSERT INTO employee
+VALUES(798654, 'Jeremy', 'Collins', '31-Jul-2012', '12-Oct-1989', '955', '745-8265', 2833946529, 'Richard', 'McKinnith', '4554 Chennith Street', 'Mason', 'OH', 45040, 32, 16.00, 'Head', 450390);
+
+INSERT INTO employee
+VALUES(123678, 'Tyson', 'Apostal', '27-Aug-2018', '05-May-2000', '342', '637-9976', 7283942, 'Mike', 'Holloway', '2712 Rollson Avenue', 'Maineville', 'OH', 45039, 15, 14.00, 'Head', 450390);
+
+INSERT INTO employee
+VALUES(539825, 'Benjamin', 'Wade', '22-Nov-2021', '17-Nov-1969', '937', '335-8365', 3201930, 'Mitch', 'Ice', '4839 Rainy Way', 'Maineville', 'OH', 45039, 25, 12.00, 'Assistant', 450390);
+
+INSERT INTO employee
+VALUES(184753, 'John', 'Cochran', '17-Dec-2019', '25-Mar-1987', '937', '197-2265', 4927402, 'Yul', 'Kwon', '1 Park Place', 'Oregonia', 'OH', 45054, 29, 12.00, 'Assistant', 450390);
+
+INSERT INTO employee
+VALUES(109845, 'Martin', 'Cheng', '24-Apr-2017', '21-Feb-1995', '937', '647-3378', 90193284, 'Todd', 'Herzog', '49399 Sunnyside Avenue', 'Oregonia', 'OH', 45054, 36, 15.00, 'Head', 450390);
+
+INSERT INTO employee
+VALUES(204975, 'Parvati', 'Shallow', '16-Feb-2020', '28-Apr-1977', '955', '265-7738', 6048239, 'James', 'Clement', '67 Clermont Road', 'Waynesville', 'OH', 45068, 38, 12.00, 'Assistant', 450390);
+
+CREATE TABLE Classroom
+(ClassroomNo NUMBER(6) PRIMARY KEY,
+EmpID NUMBER(6),
+ClassroomOccupancy NUMBER(2),
+CONSTRAINT classroom_emp_id_fk FOREIGN KEY (EmpID) REFERENCES Employee (EmpID));
+
+INSERT INTO Classroom
+VALUES(100000,827494,10);
+
+INSERT INTO Classroom
+VALUES(200000,209349,14);
+
+INSERT INTO Classroom
+VALUES(300000,549842,13);
+
+INSERT INTO Classroom
+VALUES(400000,579234,16);
+
+INSERT INTO Classroom
+VALUES(500000,123678,11);
+
+INSERT INTO Classroom
+VALUES(600000,798654,17);
+
+CREATE TABLE Material
+(MaterialName VARCHAR2(30)    PRIMARY KEY,  
+ProductName VARCHAR2(50)      NULL,
+MaterialQTY NUMBER(3)       NOT NULL,
+SupplierID NUMBER(6)	NOT NULL,
+classroomno NUMBER(6) NOT NULL,
+CONSTRAINT material_classroomno_fk FOREIGN KEY (classroomno) REFERENCES classroom(classroomno),
+CONSTRAINT SupplierID_fk FOREIGN KEY (SupplierID) REFERENCES Supplier (SupplierID));
+
+INSERT INTO material
+VALUES('Diapers', 'Huggies', 200, 859254, 500000);
+
+INSERT INTO material
+VALUES('Animal Crackers', 'Austin', 100, 918323, 400000);
+
+INSERT INTO material
+VALUES('Wipes', 'Huggies', 100, 859254, 500000);
+
+INSERT INTO material
+VALUES('Hand Sanitizer', 'Purell', 50, 957347, 200000);
+
+INSERT INTO material
+VALUES('Blankets', 'Wolf', 100, 573958, 100000);
+
+CREATE TABLE Parent 
+(ParentID NUMBER(6)      PRIMARY KEY,
+ParentFName VARCHAR2(30)       NOT NULL,
+ParentLName VARCHAR2(30)       NOT NULL,
+ParentAddress VARCHAR2(30)        NOT NULL,
+ParentRelationToChild VARCHAR2(20),   
+ParentPhone VARCHAR2(10)       NOT NULL,
+ParentAreaCode VARCHAR2(5),
+ParentZipCode VARCHAR2(10),
+ParentCity VARCHAR2(30),
+ParentLastPayment DATE,
+ParentTotalAmountOwed NUMBER(10,4),
+ParentPaymentType VARCHAR2(30));
+
+INSERT INTO parent
+VALUES(294769, 'Chris', 'Hawkins', '345 Thomson Lane', 'Father', '316-3900', '213', 73993, 'Little Hill', '12-Mar-2022', 365.43, 'Discover Credit Card');
+
+INSERT INTO parent
+VALUES(956489, 'Marie', 'Johnson', '3210 Cherry Lane Apt 203', 'Guardian', '334-3899', '413', 98047, 'Big Rock', '26-Feb-2022', 134.28, 'Cash');
+
+INSERT INTO parent
+VALUES(672957, 'Jane', 'Reese', '22 Greyson Way', 'Mother', '855-9350', '213', 73993, 'Little Hill', '23-Jan-2022', 90.67, 'Check');
+
+INSERT INTO parent
+VALUES(884639, 'Frank', 'Bankers', '2859 Wooster Way', 'Father', '845-2149', '671', 11873, 'Cheyenne', '20-Apr-2022', 60.75, 'American Express');
+
+INSERT INTO parent
+VALUES(376731, 'Dawn', 'Klewin', '7225 Northwoods Drive', 'Mother', '488-3992', '765', 93548, 'Grand City', '29-Mar-2022', 259.90, 'Mastercard');
+
+INSERT INTO parent
+VALUES(227699, 'James', 'Andrews', '766 Stacy Lane', 'Father', '567-2274', '312', 17290, 'Pebble Village', '01-Apr-2022', 34.56, 'Cash');
+
+INSERT INTO parent
+VALUES(587751, 'Mitchell', 'Jefferson', '367 Candal Street', 'Father', '746-7371', '228', 27547, 'Jones', '23-Jan-2022', 603.40, 'Check');
+INSERT INTO parent
+VALUES(143388, 'Cassandra', 'Martinez', '7 Raupp Street', 'Mother', '547-2274', '213', 73993, 'Little Hill', '23-Mar-2022', 16.42, 'Cash');
+
+INSERT INTO parent
+VALUES(284940, 'Marybeth', 'Drawbridge', '26 Lessie Drive', 'Guardian', '544-2746', '671', 93548, 'Grand City', '04-Apr-2022', 76.34, 'American Express');
+
+
+CREATE TABLE Child
+(ClassroomNo  NUMBER(6) NOT NULL,
+ChildID NUMBER(6) PRIMARY KEY,
+ChildFName VARCHAR2(30) NOT NULL,
+ChildLName VARCHAR2(30) NOT NULL,
+ChildDOB DATE NOT NULL,
+FoodAllergies VARCHAR2(500),
+ParentID NUMBER(6) NOT NULL,
+EmergencyContactOne_FName VARCHAR2(30) NOT NULL,
+EmergencyContactOne_LName VARCHAR2(30) NOT NULL,
+EmergencyContactOne_AreaCode VARCHAR2(5) NOT NULL,
+EmergencyContactOne_PNumber VARCHAR2(10) NOT NULL,
+EmergencyContactTwo_FName VARCHAR2(30),
+EmergencyContactTwo_LName VARCHAR2(30),
+EmergencyContactTwo_AreaCode VARCHAR2(5),
+EmergencyContactTwo_PNumber VARCHAR(10),
+CONSTRAINT ParentID_fk FOREIGN KEY (ParentID) REFERENCES Parent (ParentID),
+CONSTRAINT child_classroomno_fk FOREIGN KEY (classroomno) REFERENCES classroom(classroomno));
+
+INSERT INTO Child
+VALUES(300000,336584,'Davie','Hawkins','04-Nov-2020',NULL,294769,'Sandra','Diaz','572','876-0720','Tony','Vlachos','560','220-2840');
+
+INSERT INTO Child
+VALUES(600000,533784,'Jennifer','Johnson','23-Sep-2014','Peanuts',956489,'Rob','Cesternino','901','243-0608','Amber','Mariano','375','694-0208');
+
+INSERT INTO Child
+VALUES(200000,659368,'Lake','Reese','17-Feb-2021',NULL,672957,'Nick','Wilson','847','837-3057','Russell','Hantz','361','960-1922');
+
+INSERT INTO Child
+VALUES(400000,284568,'Richard','Bankers','18-Feb-2019',NULL,884639,'James','Frederick','403','822-9078','Marissa','Grandson','388','391-9276');
+
+INSERT INTO Child
+VALUES(100000,836673,'Christine','Andrews','01-Apr-2021','Strawberries',227699,'Mandy','Jimney','607','749-7399','Chris','Arikson','467','987-2391');
+
+INSERT INTO Child
+VALUES(600000,172978,'Jacob','Andrews','01-Dec-2015',NULL,227699,'Mandy','Jimney','607','749-7399','Chris','Arikson','467','987-2391');
+
+INSERT INTO Child
+VALUES(500000,337468,'Kenzie','Klewin','10-Jul-2018','Peanuts',376731,'Eileen','Smithson','877','838-2845','Ashley','Benjamin','947','987-1754');
+
+
+INSERT INTO Child
+VALUES(100000,283365,'Mark','Jefferson','27-Sep-2021','Tree Nuts',587751,'Killian','Weber','436','634-2740','Leslie','Jackson','366','836-7365');
+
+INSERT INTO Child
+VALUES(200000,865678,'Raquel','Martinez','29-Jul-2019','Peanuts, Tree Nuts',143388,'Jeon','Lee','745','538-3611','Christian','Allesandro','634','876-1342');
+
+INSERT INTO Child
+VALUES(300000,332643,'Janison','Drawbridge','11-May-2018','Strawberries',284940,'Chris','Ann','613','630-6271','Marybeth','Matthews','378','274-3722');
+
+CREATE TABLE Head_Teacher
+(EmpID NUMBER(6)  PRIMARY KEY,
+HT_GED CHAR(1)  NOT NULL,
+Certificate CHAR(1) NOT NULL,
+CONSTRAINT head_teacher_fk FOREIGN KEY (EmpID) REFERENCES Employee(EmpID)); 
+
+INSERT INTO head_teacher
+VALUES (209349, 'Y', 'Y');
+
+INSERT INTO head_teacher
+VALUES (579234, 'Y', 'Y');
+
+INSERT INTO head_teacher
+VALUES (549842, 'Y', 'R');
+
+INSERT INTO head_teacher
+VALUES (798654, 'Y', 'Y');
+
+INSERT INTO head_teacher
+VALUES (123678, 'Y', 'Y');
+
+INSERT INTO head_teacher
+VALUES (109845, 'Y', 'Y');
+
+CREATE TABLE assistant_teacher
+(EmpID NUMBER(6)   PRIMARY KEY,
+AT_GED CHAR(1)  NOT NULL,
+CONSTRAINT assistant_teacher_fk FOREIGN KEY (EmpID) REFERENCES Employee(EmpID));
+
+INSERT INTO assistant_teacher
+VALUES (827494, 'Y');
+
+INSERT INTO assistant_teacher
+VALUES (539825, 'Y');
+
+INSERT INTO assistant_teacher
+VALUES (184753, 'Y');
+
+INSERT INTO assistant_teacher
+VALUES (204975, 'Y');
+
+
+CREATE TABLE OrderForm
+(Materialname VARCHAR2(30),
+Supplierid  NUMBER(6),
+OrderQTY NUMBER(6),
+UnitPrice NUMBER(10,4),
+CONSTRAINT OrderForm_MaterialName_fk FOREIGN KEY (MaterialName) REFERENCES Material(MaterialName),
+CONSTRAINT OrderForm_SupplierID_fk FOREIGN KEY (SupplierID) REFERENCES Supplier(SupplierID),
+CONSTRAINT OrderForm_MatName_SupID_pk PRIMARY KEY(MaterialName, SupplierID));
+
+INSERT INTO OrderForm
+VALUES('Diapers',859254,150,1.50);
+
+INSERT INTO OrderForm
+VALUES('Animal Crackers',918323,200,0.76);
+
+INSERT INTO OrderForm
+VALUES('Wipes',859254,300,0.23);
+
+INSERT INTO OrderForm
+VALUES('Blankets',573958,100,11.87);
+
+## Query Development and Execution
+
+CREATE INDEX ind_emp_city ON employee(empcity);
+
+
+SELECT childfname || ' ' || childlname AS "Child name", parentfname || ' ' || parentlname AS "Parent name", parentareacode ||'-'||parentphone AS "Parent phone number", EmergencyContactOne_FName || ' ' || EmergencyContactOne_LName AS "Emergency Contact 1", EmergencyContactTwo_FName || ' ' || EmergencyContactTwo_LName AS "Emergency Contact 2"
+FROM child
+JOIN parent USING(parentid)
+
+This query will help with the transportation of the students to make sure they are released to their parents. It will support the school transportation view. It provides the parents name as well as phone number so if the parent is not there to pick up the child, they can be contacted to see which emergency contact they can be released to. An additional query could be quickly run to get the emergency contacts phone numbers, but it is assumed if a parent is not able to pick up the child, they will prepare for an emergency contact to come pick up the child.
+
+SELECT empID, empfname|| ' ' || emplname AS "Employee name",  hoursworked, to_char(hourlyrate,'$99.99') AS "Hourly Rate", to_char((hoursworked*hourlyrate), '$999,999.99') AS "Pay for period"
+FROM employee
+
+
+This query will help Toddler Time keep track of employees hours worked and will support the employee time sheet view. In addition to hours worked, it will also show the employees’ pay rates as well as how much they have made for the period.
+
+SELECT childfname || ' ' || childlname AS "Child name", foodallergies
+FROM child
+WHERE foodallergies IS NOT NULL
+
+
+This query will help support the child's medical history view so employees know which students have allergies when having snacks. It will be crucial to identify what kind of allergic reaction a student might be having in a quick manner in the case of an emergency which this query can do.
+
+SELECT materialname, orderqty, to_char(unitprice,'$999.99') AS "Unit price", to_char(orderqty*unitprice, '$999,999.99') AS "Total cost", (SELECT to_char(SUM(orderqty*unitprice),'$999,999.99') FROM orderform) AS "Total Material Cost", ROUND((orderqty*unitprice)/(SELECT SUM(orderqty*unitprice) FROM orderform)*100, 2) AS "Percent of Total Material Cost"
+FROM orderform
+
+
+This query will show Toddler Time how much they are spending on each material as well as the percentage of each material cost out of the total material cost. This will help identify where they may be over spending and if they should look to find new suppliers. This query will support the material order form.
+
+SELECT parentlname, parentfname, to_char(parenttotalamountowed, '$999.99') AS "Amount owed", parentlastpayment, parentpaymenttype
+FROM parent
+
+This query will help support the parent payment view to make sure parents are staying up to date with their payments. It is important to make sure they pay on time and if they are getting behind on payments, see if a payment plan may be utilized.
+
+
+
+
+
+
+
+
+
+SELECT emplname, empfname, HCprovider_Fname ||' '||HCprovider_lname AS "Health Care Provider", hcpolicynumber
+FROM employee
+
+This query will support the employee medical history view to keep all the employees health care providers and policy numbers in a singular place in case there is an emergency of one of the employees.
+
+SELECT classroomno, emplname, empfname, classroomoccupancy, COUNT(childid) AS "Children in classroom"
+FROM classroom
+JOIN employee USING(empid)
+JOIN child USING (classroomno)
+GROUP BY classroomno, emplname, empfname, classroomoccupancy;
+
+
+This query will support the classroom view to keep track of the number of children assigned to each classroom as well as who is in charge of that classroom. It will help ensure there are never more children in the table than the maximum occupancy.
+
+SELECT emplname, empfname, certificate
+FROM head_teacher
+JOIN employee USING(empid)
+WHERE certificate='R'
+
+This query will support the teacher certificate progress sheet to show which employees need to renew their certificate. It is important to make sure the employees stay up to date with their certifications to stay as a head teacher.
+
+SELECT dcname, dcaddress, dczipcode, dcstate, suppliername, supplieraddress, supplierzipcode, supplierstate
+FROM daycarecompany
+JOIN employee USING(daycareid)
+JOIN classroom USING(empid)
+JOIN material USING(classroomno)
+JOIN supplier USING(supplierid)
+
+This query will help support the materials order form to show the supplier and supplier address as well as the address of ToddlerTime so the company can quickly place orders and know where they are coming from. It will also help in case an order is incorrect and needs to be sent back.
+
+
+SELECT ChildFName, ChildLName, MaterialName, ProductName
+FROM child
+JOIN classroom USING(ClassroomNo)
+JOIN material USING(ClassroomNo)
+JOIN orderform USING(MaterialName)
+WHERE MaterialName LIKE 'Animal Crackers';
+
+This query will help parents see information about the food their children are eating. The employees at the daycare center will be able to quickly search for information about the manufacturer of the child’s food.
