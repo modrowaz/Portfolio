@@ -1,0 +1,9 @@
+The sample dataset contains around 2.5 million rows of transaction data with further information about demographic, household, and sales. 
+
+Project Objectives:
+
+1) Develop a star schema with the given data tables.
+
+2) Develop measures in the Dashboard Measures table to report on KPIs.
+
+3) Create a dashboard to display the analysis.
