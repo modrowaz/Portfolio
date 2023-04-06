@@ -1,0 +1,11 @@
+The starting point os a star schema data model with a Sales table as the fact table, and the dimensions are Customer, Data, and Product tables with a supplementary Budget table.
+
+Objectives:
+
+1) Allocate budget to brands based on sales in 2009.
+
+2) Develop Sales Amount in 2009, Allocated Budget, and Allocated Budget within a context measures in the sales table.
+
+3) Make the Sales Amount and Budget sliceable for reporting.
+
+4) Create a display of allocated budget amounts by individual product categories, Countries, and Month.
