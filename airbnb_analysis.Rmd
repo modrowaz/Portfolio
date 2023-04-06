@@ -1,0 +1,298 @@
+---
+title: "Airbnb Data Modeling"
+date:  "Last complied on `r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document: 
+  
+    toc: true
+    toc_float: true
+    theme: sandstone
+    highlight: tango
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      cache = TRUE, 
+                      warning = FALSE,
+                      message = FALSE)
+```
+
+## Pre-Processing
+
+
+```{R}
+airbnb = read.csv("airbnb_training-1.csv", stringsAsFactors = T)
+validation = read.csv("airbnb_validation.csv", stringsAsFactors = T)
+
+
+airbnb$X = NULL
+airbnb$id = NULL
+airbnb$name = NULL
+airbnb$host_name = NULL
+airbnb$host_id = NULL
+airbnb$neighbourhood = NULL 
+airbnb$last_review = NULL
+
+validation$X = NULL
+validation$id = NULL
+validation$name = NULL
+validation$host_name = NULL
+validation$host_id = NULL
+validation$neighbourhood = NULL
+validation$last_review = NULL
+
+str(airbnb)
+
+airbnb$room_type = as.factor(airbnb$room_type)
+airbnb$neighbourhood_group = as.factor(airbnb$neighbourhood_group)
+
+
+
+
+```
+
+## Model 1
+
+```{r}
+reg1 = lm(price ~ neighbourhood_group + room_type + calculated_host_listings_count
+          + availability_365 + latitude + longitude + latitude:longitude + room_type:minimum_nights +
+            I(minimum_nights^2), data = airbnb)
+summary(reg1)
+
+
+
+pred.val.1 = predict(reg1, newdata = validation)
+res.1 = validation$price - pred.val.1
+res_sqr.1 = res.1^2
+SSE_validation = sum(res_sqr.1 = res.1^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_1 = 1 - (SSE_validation/SST)
+
+R2_validation_1
+
+pred_reg1 = predict(reg1, validation)
+ASE_reg1 = mean((validation$price - pred_reg1)^2)
+ASE_reg1
+```
+
+## Model 2
+
+```{r}
+
+
+reg2 = lm(price ~ room_type + minimum_nights + number_of_reviews + I(number_of_reviews^2) + longitude + I(longitude^2) + latitude + I(latitude^2) + longitude:latitude + room_type:neighbourhood_group, data = airbnb)
+
+pred.val.2 = predict(reg2, newdata = validation)
+res.2 = validation$price - pred.val.2
+res_sqr.2 = res.2^2
+SSE_validation = sum(res_sqr.2 = res.2^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_2 = 1 - (SSE_validation/SST)
+
+R2_validation_2
+
+pred_reg2 = predict(reg2, validation)
+ASE_reg2 = mean((validation$price - pred_reg2)^2)
+ASE_reg2
+
+RASE_reg2 = sqrt(ASE_reg2)
+RASE_reg2
+
+```
+
+## Model 3
+
+```{r}
+
+reg3 = lm(price ~ room_type   +
+            number_of_reviews + availability_365 +
+            I(number_of_reviews^2) + longitude + I(longitude^2) + I(latitude^2) + longitude:latitude + 
+            room_type:neighbourhood_group + room_type:number_of_reviews, data = airbnb)
+summary(reg3)
+
+pred.val.3 = predict(reg3, newdata = validation)
+res.3 = validation$price - pred.val.3
+res_sqr.3 = res.3^2
+SSE_validation = sum(res_sqr.3 = res.3^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_3 = 1 - (SSE_validation/SST)
+
+R2_validation_3
+
+pred_reg3 = predict(reg3, validation)
+ASE_reg3 = mean((validation$price - pred_reg3)^2)
+ASE_reg3
+
+RASE_reg3 = sqrt(ASE_reg3)
+RASE_reg3
+
+```
+
+## Model 4
+
+```{r}
+reg4 = lm(price ~ room_type   +
+            number_of_reviews + availability_365 +
+            I(number_of_reviews^2) + longitude + I(longitude^2) + I(latitude^2) + longitude:latitude + 
+            room_type:neighbourhood_group + room_type:number_of_reviews + neighbourhood_group:latitude +
+            neighbourhood_group:longitude, data = airbnb)
+summary(reg4)
+
+pred.val.4 = predict(reg4, newdata = validation)
+res.4 = validation$price - pred.val.4
+res_sqr.4 = res.4^2
+SSE_validation = sum(res_sqr.4 = res.4^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_4 = 1 - (SSE_validation/SST)
+
+R2_validation_4
+
+pred_reg4 = predict(reg4, validation)
+ASE_reg4 = mean((validation$price - pred_reg4)^2)
+ASE_reg4
+
+RASE_reg4 = sqrt(ASE_reg4)
+RASE_reg4
+```
+
+## Model 5
+
+```{r}
+
+reg5 = lm(price ~ room_type + calculated_host_listings_count + I(calculated_host_listings_count^2) + 
+            I(calculated_host_listings_count^3) +
+            number_of_reviews + availability_365 +
+            I(number_of_reviews^2) + longitude + I(longitude^2) + I(latitude^2) + longitude:latitude + 
+            room_type:neighbourhood_group + room_type:number_of_reviews + neighbourhood_group:latitude +
+            neighbourhood_group:longitude, data = airbnb)
+summary(reg5)
+
+pred.val.5 = predict(reg5, newdata = validation)
+res.5 = validation$price - pred.val.5
+res_sqr.5 = res.5^2
+SSE_validation = sum(res_sqr.5 = res.5^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_5 = 1 - (SSE_validation/SST)
+
+R2_validation_5
+
+pred_reg5 = predict(reg5, validation)
+ASE_reg5 = mean((validation$price - pred_reg5)^2)
+ASE_reg5
+
+RASE_reg5 = sqrt(ASE_reg5)
+RASE_reg5
+
+```
+
+## Model 6
+
+```{r}
+
+reg6 = lm(price ~ room_type + calculated_host_listings_count + I(calculated_host_listings_count^2) + 
+            I(calculated_host_listings_count^3) +
+            number_of_reviews + availability_365 +
+            I(number_of_reviews^2) + longitude + latitude + I(longitude^2) + I(latitude^2) + longitude:latitude + 
+            room_type:neighbourhood_group + room_type:number_of_reviews + neighbourhood_group:latitude +
+            neighbourhood_group:longitude, data = airbnb)
+summary(reg6)
+
+pred.val.6 = predict(reg6, newdata = validation)
+res.6 = validation$price - pred.val.6
+res_sqr.6 = res.6^2
+SSE_validation = sum(res_sqr.6 = res.6^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_6 = 1 - (SSE_validation/SST)
+
+R2_validation_6
+
+pred_reg6 = predict(reg6, validation)
+ASE_reg6 = mean((validation$price - pred_reg6)^2)
+ASE_reg6
+
+RASE_reg6 = sqrt(ASE_reg6)
+RASE_reg6
+
+```
+
+## Model 7
+
+```{r}
+
+reg7 = lm(price ~ room_type + calculated_host_listings_count + I(calculated_host_listings_count^2) + 
+            I(calculated_host_listings_count^3) +
+            number_of_reviews + availability_365 +
+            I(number_of_reviews^2) + longitude + latitude + I(longitude^2) + I(latitude^2) + longitude:latitude + 
+            room_type:neighbourhood_group + room_type:number_of_reviews + neighbourhood_group:latitude +
+            neighbourhood_group:longitude, data = airbnb)
+summary(reg7)
+
+pred.val.7 = predict(reg7, newdata = validation)
+res.7 = validation$price - pred.val.7
+res_sqr.7 = res.7^2
+SSE_validation = sum(res_sqr.7 = res.7^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_7 = 1 - (SSE_validation/SST)
+
+R2_validation_7
+
+pred_reg7 = predict(reg7, validation)
+ASE_reg7 = mean((validation$price - pred_reg7)^2)
+ASE_reg7
+
+RASE_reg7 = sqrt(ASE_reg7)
+RASE_reg7
+
+```
+
+## Best Model
+
+```{r}
+champion = lm(price ~ room_type + calculated_host_listings_count + number_of_reviews + availability_365
+              + neighbourhood_group + room_type + minimum_nights
+              + I(calculated_host_listings_count^2) + I(calculated_host_listings_count^3)+I(number_of_reviews^2) 
+              + longitude + latitude + I(latitude^2) + neighbourhood_group:longitude 
+              + neighbourhood_group:latitude + neighbourhood_group:minimum_nights
+              + latitude:longitude + latitude:minimum_nights + longitude:minimum_nights
+              + longitude:room_type + longitude:availability_365
+              + room_type:minimum_nights + room_type:availability_365
+              + calculated_host_listings_count:availability_365, data = airbnb)
+
+summary(champion)
+
+pred.val.1 = predict(champion, newdata = validation)
+res.1 = validation$price - pred.val.1
+res_sqr.1 = res.1^2
+SSE_validation = sum(res_sqr.1 = res.1^2)
+SST = sum((validation$price - mean(validation$price))^2)
+R2_validation_1 = 1 - (SSE_validation/SST)
+
+R2_validation_1
+
+pred_champion = predict(champion, validation)
+ASE_champion = mean((validation$price - pred_reg1)^2)
+ASE_champion
+
+RASE_champion = sqrt(ASE_champion)
+RASE_champion
+
+
+levels(airbnb$room_type)
+
+plot(airbnb$neighbourhood_group, airbnb$price)
+
+e = champion$residuals
+qqnorm(e)
+plot(champion$fitted.values, champion$residuals)
+mean(e)
+hist(e)
+
+
+
+
+
+
+library(corrplot)
+corrplot(cor(model.matrix(lm(price ~ ., data = airbnb))[,-1]))
+```
