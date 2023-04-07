@@ -486,3 +486,6 @@ JOIN orderform USING(MaterialName)
 WHERE MaterialName LIKE 'Animal Crackers';
 
 This query will help parents see information about the food their children are eating. The employees at the daycare center will be able to quickly search for information about the manufacturer of the child’s food.
+
+
+## Authored by: Magda Odrowaz, Alison Myers, David Muth, Karly Brock 
