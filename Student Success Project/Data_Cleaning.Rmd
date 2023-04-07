@@ -1,0 +1,287 @@
+---
+title: "Data Exploration"
+author: "Riley Nguyen, Magda Odrowaz, Matt Smuda, Drew Nanda"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output: 
+  html_document:
+    code_folding: show
+    code_download: true
+    df_print: paged
+    number_sections: yes
+    theme: readable
+    toc: yes
+    toc_float: yes
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE,
+                      cache = TRUE,
+                      progress = FALSE, 
+                      verbose = FALSE,
+                      dpi = 300,
+                      dev = c('png', 'postscript', 'tiff'),
+                      out.width = '100%')
+options(qwraps2_markup = "markdown")
+```
+
+```{r,include=FALSE}
+if(require(pacman)==FALSE) install.packages("pacman")
+pacman::p_load(DataExplorer,tidyverse,dplyr,readxl,plotly,zipcodeR, corrplot)
+
+```
+
+In this RMarkdown, we will conduct data merging and cleaning using the data files provided by Alan.There are six files in total. We will load them in, merge them to narrow down to just FSB students, and perform some data cleaning to arrive at a one single dataset.
+
+## LOAD DATA IN
+```{r}
+# data about enrolled core FSB courses (ECO201, ECO202, etc) and grades
+enrollment = read.csv("Student Success - Course Enrollment.csv") 
+
+# contains pidm for each student (unique identifier)
+fsb = read.csv("Student Success - FSB PIDM List.csv")
+
+# contains their involvement in greek organizations
+greek = read.csv("Student Success - Greek.csv")
+
+# every major they pick over time
+majors = read.csv("Student Success - Majors.csv")
+
+### demographic, standardized test scores, whether they graduated, etc
+retention = read.csv("Student Success - Retention.csv")
+
+### degree obtained, gpa, years taken to graduate, etc
+degrees = read.csv("Student Success - Degrees Awarded.csv")
+```
+
+## DATA EXPLORATION & MERGE
+```{r fsb, message = FALSE, warning =FALSE}
+# fsb  dataset
+colnames(fsb)[which(names(fsb)=="Pidm")] <- "PIDM" #for consistent column name across different dataset
+
+# retention dataset
+names(retention)[1] = "PIDM"
+### merge to get only students that are in FSB PIDM
+merged_data <- fsb %>% inner_join(retention,by="PIDM")
+```
+```{r greek}
+# greek dataset
+colnames(greek)[which(names(greek)=="Pidm")] <- "PIDM" #consistent name across different dfs
+## get greek involvement for every unique PIDM (student)
+greek=greek%>%
+  group_by(PIDM)%>%
+  summarize(Greek_Involvement=n(),Term.Count.Greek=max(Term.Count))
+## merge with the merged data set from above
+merged_data=merge(merged_data,greek,key=PIDM,all.x=T)
+merged_data=merged_data%>%
+  mutate(Greek_Involvement=ifelse(is.na(Greek_Involvement),0,Greek_Involvement),Term.Count.Greek=ifelse(is.na(Term.Count.Greek),0,Term.Count.Greek))
+```
+```{r}
+# majors dataset - contain all majors 1 student can have from start to finish
+colnames(majors)[which(names(majors)=="Pidm")] <- "PIDM"
+
+## filter out just fsb students from majors dataset
+majors_fsb <- majors %>% right_join(fsb,by="PIDM") 
+
+## the code below takes the first and last majors for each student
+majors_fsb=majors_fsb%>%
+  group_by(PIDM)%>%
+  arrange(Term.Code)%>%
+  summarize(First.Major=first(Major),Last.Major=last(Major),Major.Changes=length(unique(Major)))
+
+## merge this data with the above merged dataset
+merged_data=merge(merged_data,majors_fsb,key=PIDM,all.x=T)
+```
+
+```{r}
+# enrollment dataset
+names(enrollment)[1] = "PIDM"
+
+# filter down to just fsb students
+enrollment_fsb = enrollment %>% inner_join(fsb,by="PIDM")
+
+# extract grade and transform to merge with our dataset
+enrollment_fsb=enrollment_fsb%>%
+  spread(Course,Final.Letter.Grade.Group)%>%
+  select(-Earned.Academic.Credit,-Term.Code,-Course.Completed,-GPA.Quality.Points) %>%
+  group_by(PIDM)%>%
+  summarise(across(everything(), ~ max(., na.rm = T))) 
+
+# merge the data to our merged dataset
+merged_data=merge(merged_data,enrollment_fsb,key=PIDM,all.x=T)
+```
+
+## OVERVIEW OF MERGED DATASET
+```{r}
+summary(merged_data)
+
+plot_bar(merged_data) #visualize frequency distributions for all discrete features
+
+plot_histogram(merged_data) #visualize distributions for all continuous features
+
+
+```
+
+## DATA CLEANING
+```{r}
+# drop columns with all the same value across all students
+merged_data = merged_data %>% select(where(~n_distinct(.) > 1))
+```
+
+```{r}
+# remove CT.Primary.Major since Alan said it's not useful
+merged_data = merged_data %>% select(-CT.Primary.Major)
+```
+
+```{r}
+# remove SAT and ACT, since we will use CT.BEST instead
+merged_data = merged_data %>% select(-CT.SAT.Total)
+merged_data = merged_data %>% select(-CT.ACT.Composite)
+```
+
+```{r}
+# degree attained indicator vs no of degree attained
+merged_data %>% group_by(Degree.Attained.Indicator) %>%
+  summarize(count=n())
+merged_data %>% group_by(CT.Degree.Attained.Count) %>%
+  summarize(count=n()) #same as degree attained indicator, we can drop one of them
+merged_data = merged_data %>% select(-CT.Degree.Attained.Count)
+# recode degree.attained.indicator (for modeling purpose later)
+merged_data = merged_data %>% mutate(Degree.Attained.Indicator = as.factor(ifelse(merged_data$Degree.Attained.Indicator == "Degree Attained",1,0)))
+# quick check:
+merged_data %>% group_by(Degree.Attained.Indicator) %>%
+  summarize(count=n()) ## correct number
+```
+
+### DEALING WITH NAs
+```{r}
+# geographic data
+# delete county, since we will compute distance using zip code
+merged_data = merged_data %>% select(-CT.County)
+# distance from their zip code to miami
+# get the 5 digits of zip code, since we currently have the format of XXXXX-XXXX
+# substr(merged_data$CT.Zip.Code,1,5)
+# zip_distance(zipcode_a, zipcode_b, lonlat = TRUE, units = "miles")
+merged_data$CT.Zip.Code = substr(merged_data$CT.Zip.Code,1,5)
+miami_zip = 45056
+#(zip_distance(45056, miami_zip))$distance #generate a df, so will have to get $distance as a column
+
+merged_data = merged_data %>%
+  mutate(Distance=zip_distance(CT.Zip.Code,miami_zip, unit="miles")$distance)
+
+```
+
+```{r}
+# demographic cols (CT.Residency, CT.Domestic.Minority, CT.IPEDS.Race.Ethnicity, CT.International.Student)
+# Domestic Minoriy is similar to International.Student (domestic students are broken into minority vs non-minority), so we would remove International.Student to avoid redundancy
+merged_data %>% group_by(CT.International.Student) %>%
+  summarize(count=n())
+merged_data %>% group_by(CT.Domestic.Minority) %>%
+  summarize(count=n())
+merged_data = merged_data %>% select(-CT.International.Student)
+```
+
+```{r}
+# check for NA values
+sapply(merged_data, function(x) sum(is.na(x)))
+plot_missing(merged_data)
+```
+
+```{r}
+merged_data %>% group_by(Degree.Attained.Indicator) %>%
+  summarize(count=n())
+merged_data %>% group_by(Years.to.Degree.Average) %>%
+  summarize(count=n())
+merged_data %>% group_by(Semesters.to.Degree...Elapsed) %>%
+  summarize(count=n())
+
+# the missing values in the 2 cols (Years.to.Degree.Avg & Semesters.to.Degree...Elapsed) corresponds to whether they get their degree or not (if they did not grad, there will be missing vals in these 2 cols)
+# do we care about if they graduate sooner than 4 years? maybe just keep either semesters or years - since they are providing the same information? 
+# still, I have a code to clean the column here anyway in case we would need it later
+# merged_data$Semesters.to.Degree...Elapsed = substr(merged_data$Semesters.to.Degree...Elapsed,1,2)
+merged_data = merged_data %>% select(-Semesters.to.Degree...Elapsed)
+
+# recode NAs. since NAs mean they did not get their degree, I would replace NAs with 0 for now. 
+merged_data$Years.to.Degree.Average[is.na(merged_data$Years.to.Degree.Average)] <- 0
+```
+
+```{r}
+# we have 96 NAs for distance, but there are 126 international students. I expected the number to match (since the internationals would put in an internatial zip code/no zip code at all), but some actually put in an US zip code.this would make the calculated distance shorter for these students (even though they are international students and may have travelled a long way here). not sure how to interpret this though, but i think this should be a minority within our dataset of > 1000 students, so should not be too big of a problem.
+
+merged_data %>% group_by(CT.Domestic.Minority) %>%
+  summarize(count=n())
+
+# for modeling purpose later, I would remove the rows with NAs, since it's really hard to imputate, and wrong imputation may wreck our model later. for example, we cannot just fill in all NAs with 1000 or 2000 or 3000 or have an informed value without info about their origin country (Vietnam, China, etc)
+merged_data = merged_data %>% drop_na(Distance)
+
+
+```
+
+```{r}
+##### The missing values in core course grades may be they dropped out before taking the course, they took the course somewhere else and transferred credits, they had some APs, etc. I will fill these NAs with CR for those that graduated, and with No CR for those that did not graduate for now. 
+#ACC221
+merged_data$ACC221[is.na(merged_data$ACC221) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$ACC221[is.na(merged_data$ACC221) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+#ACC222
+merged_data$ACC222[is.na(merged_data$ACC222) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$ACC222[is.na(merged_data$ACC222) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+#BLS342
+merged_data$BLS342[is.na(merged_data$BLS342) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$BLS342[is.na(merged_data$BLS342) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+#CSE148
+merged_data$CSE148[is.na(merged_data$CSE148) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$CSE148[is.na(merged_data$CSE148) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+#ECO201
+merged_data$ECO201[is.na(merged_data$ECO201) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$ECO201[is.na(merged_data$ECO201) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+#ECO202
+merged_data$ECO202[is.na(merged_data$ECO202) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$ECO202[is.na(merged_data$ECO202) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+#FIN301
+merged_data$FIN301[is.na(merged_data$FIN301) == TRUE & merged_data$Degree.Attained.Indicator ==1] <- "CR"
+merged_data$FIN301[is.na(merged_data$FIN301) == TRUE & merged_data$Degree.Attained.Indicator ==0] <- "No CR"
+
+
+
+```
+```{r}
+##### Note: the grade columns (GPA, CT.BEST)
+merged_data %>% group_by(TM.Cum.GPA.Average,Degree.Attained.Indicator) %>%
+  summarize(count=n())
+merged_data %>% group_by(CT.First.Semester.GPA.Average,Degree.Attained.Indicator) %>%
+  summarize(count=n())
+##### The 3 missing vals in TM.CUM.GPA.Average are all of students not graduating, the missing vals for first sem GPA are a mixed (some did get their degree, some not). I'd drop these for now, since we have > 1000 obs and there are ~15 missing values only
+merged_data = merged_data %>% drop_na(TM.Cum.GPA.Average)
+merged_data = merged_data %>% drop_na(CT.First.Semester.GPA.Average)
+
+```
+
+```{r}
+#### CT.BEST. I'm honestly not sure how to fill these, so I would remove the NAs for now. We can discuss more later!
+merged_data %>% group_by(CT.BEST,Degree.Attained.Indicator) %>%
+  summarize(count=n())
+merged_data = merged_data %>% drop_na(CT.BEST)
+```
+
+```{r}
+### QUICK CHECK
+library(skimr)
+plot_missing(merged_data)
+merged_data = merged_data %>% select(-PIDM)
+skim(merged_data)
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+write_csv(merged_data,"draft_data.csv")
+```
+
+
+
