@@ -1,4 +1,4 @@
-The starting point os a star schema data model with a Sales table as the fact table, and the dimensions are Customer, Data, and Product tables with a supplementary Budget table.
+The starting point is a star schema data model with a Sales table as the fact table, and the dimensions are Customer, Data, and Product tables with a supplementary Budget table.
 
 Objectives:
 
